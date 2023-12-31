@@ -5,6 +5,7 @@ charset-normalizer==3.3.2
 click==8.1.7
 dash==2.14.2
 dash-core-components==2.0.0
+dash-daq==0.5.0
 dash-html-components==2.0.0
 dash-table==5.0.0
 DateTime==5.4
