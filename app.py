@@ -11,6 +11,7 @@ from datetime import datetime as dt
 
 import dash
 from dash import dcc
+import dash_daq as daq
 from dash import html
 from dash.dependencies import Input, Output 
 
@@ -62,6 +63,20 @@ app.layout = html.Div([
         'border-width': '5px'
     }),
 
+    daq.BooleanSwitch(
+        id='accumulated_switch',
+        on=False,
+        label="Accumulate Data",
+        labelPosition="top",
+    ),
+
+    daq.BooleanSwitch(
+        id='case_death_switch',
+        on=False,
+        label="Cases/Deaths",
+        labelPosition="top",
+    ),
+
 ])
 
 
@@ -69,34 +84,37 @@ app.layout = html.Div([
     Output('cases-graph', 'figure'),
     [Input('cases-date-picker-range', 'start_date'),
      Input('cases-date-picker-range', 'end_date'),
-     Input('cases-y-axis-scale', 'value')]
+     Input('cases-y-axis-scale', 'value'),
+     Input('accumulated_switch', 'value'),
+     Input('case_death_switch', 'value')]
 )
 
-def update_cases_graph(start_date, end_date, y_axis_scale):
+def update_cases_graph(start_date, end_date, y_axis_scale, accumulated_switch, case_death_switch):
+    dataset = cases if case_death_switch else deaths
     selected_date_columns = [col for col in cases.columns if start_date <= col <= end_date]
-    cases_df = cases[selected_date_columns]
+    df = dataset[selected_date_columns]
     
     date_range = pd.date_range(start=start_date, end=end_date)
     
-    daily_cases = []
-    for col in cases.columns:
-        daily_cases.append(cases[col].sum())
-    daily_cases_data = pd.Series(daily_cases)
+    # daily_cases = []
+    # for col in cases.columns:
+    #     daily_cases.append(cases[col].sum())
+    # daily_cases_data = pd.Series(daily_cases)
     
-    days = np.arange(len(daily_cases_data))
+    # days = np.arange(len(daily_cases_data))
     
-    poly = PolynomialFeatures(degree=4)
-    X_poly = poly.fit_transform(days.reshape(-1, 1))
+    # poly = PolynomialFeatures(degree=4)
+    # X_poly = poly.fit_transform(days.reshape(-1, 1))
 
-    pr_cases = LinearRegression()
-    pr_cases.fit(X_poly, daily_cases_data)
-    cases_poly_predictions = pr_cases.predict(X_poly)
+    # pr_cases = LinearRegression()
+    # pr_cases.fit(X_poly, daily_cases_data)
+    # cases_poly_predictions = pr_cases.predict(X_poly)
 
     if y_axis_scale == 'log':
         figure = {
         'data': [
-            {'x': list(range(len(date_range))), 'y': np.log(cases_df.sum()), 'type': 'line', 'name': 'Cases'},
-            {'x': list(range(len(date_range))), 'y': np.log(cases_poly_predictions), 'type': 'line', 'name': 'Predicted Cases', 'line': {'dash': 'dash'}}
+            {'x': list(range(len(date_range))), 'y': np.log(df.sum()), 'type': 'line', 'name': 'Cases'},
+            # {'x': list(range(len(date_range))), 'y': np.log(cases_poly_predictions), 'type': 'line', 'name': 'Predicted Cases', 'line': {'dash': 'dash'}}
             
         ],
         'layout': {
@@ -108,8 +126,8 @@ def update_cases_graph(start_date, end_date, y_axis_scale):
     else:
         figure = {
         'data': [
-            {'x': list(range(len(date_range))), 'y': cases_df.sum(), 'type': 'line', 'name': 'Cases'},
-            {'x': list(range(len(date_range))), 'y': cases_poly_predictions, 'type': 'line', 'name': 'Predicted Cases', 'line': {'dash': 'dash'}}
+            {'x': list(range(len(date_range))), 'y': df.sum(), 'type': 'line', 'name': 'Cases'},
+            # {'x': list(range(len(date_range))), 'y': cases_poly_predictions, 'type': 'line', 'name': 'Predicted Cases', 'line': {'dash': 'dash'}}
             
         ],
         'layout': {
