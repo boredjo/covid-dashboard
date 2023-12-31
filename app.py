@@ -16,11 +16,11 @@ from dash import html
 from dash.dependencies import Input, Output 
 
 
-cases = pd.read_csv('/data/cases.csv')
+cases = pd.read_csv('./data/cases.csv')
 selected_date_columns = [col for col in cases.columns if '2020-01-22' <= col <= '2023-07-23']
 cases = cases[selected_date_columns]
 
-deaths = pd.read_csv('/data/deaths.csv')
+deaths = pd.read_csv('./data/deaths.csv')
 selected_date_columns = [col for col in deaths.columns if '2020-01-22' <= col <= '2023-07-23']
 deaths = deaths[selected_date_columns]
 
@@ -45,23 +45,12 @@ app.layout = html.Div([
         max_date_allowed='2023-07-23',
     ),
     
-    dcc.RadioItems(
-        id='cases-y-axis-scale',
-        options=[
-            {'label': 'Linear Scale', 'value': 'linear'},
-            {'label': 'Log Scale', 'value': 'log'},
-        ],
-        value='linear',
-        labelStyle={
-            'display': 'block',
-            'font-size': '20px'
-        },
+     daq.BooleanSwitch(
+        id='log_linear_switch',
+        on=False,
+        label="Log/Linear",
+        labelPosition="top",
     ),
-    
-    dcc.Graph(id='cases-graph', style={
-        'border-style': 'solid',
-        'border-width': '5px'
-    }),
 
     daq.BooleanSwitch(
         id='accumulated_switch',
@@ -76,7 +65,11 @@ app.layout = html.Div([
         label="Cases/Deaths",
         labelPosition="top",
     ),
-
+    
+    dcc.Graph(id='cases-graph', style={
+        'border-style': 'solid',
+        'border-width': '5px'
+    }),
 ])
 
 
@@ -84,15 +77,17 @@ app.layout = html.Div([
     Output('cases-graph', 'figure'),
     [Input('cases-date-picker-range', 'start_date'),
      Input('cases-date-picker-range', 'end_date'),
-     Input('cases-y-axis-scale', 'value'),
-     Input('accumulated_switch', 'value'),
-     Input('case_death_switch', 'value')]
+     Input('log_linear_switch', 'on'),
+     Input('accumulated_switch', 'on'),
+     Input('case_death_switch', 'on')]
 )
 
-def update_cases_graph(start_date, end_date, y_axis_scale, accumulated_switch, case_death_switch):
+def update_graph(start_date, end_date, log_linear_switch, accumulated_switch, case_death_switch):
     dataset = cases if case_death_switch else deaths
     selected_date_columns = [col for col in cases.columns if start_date <= col <= end_date]
     df = dataset[selected_date_columns]
+
+    if accumulated_switch: df = df.diff(axis=1, periods=7)
     
     date_range = pd.date_range(start=start_date, end=end_date)
     
@@ -110,7 +105,7 @@ def update_cases_graph(start_date, end_date, y_axis_scale, accumulated_switch, c
     # pr_cases.fit(X_poly, daily_cases_data)
     # cases_poly_predictions = pr_cases.predict(X_poly)
 
-    if y_axis_scale == 'log':
+    if log_linear_switch:
         figure = {
         'data': [
             {'x': list(range(len(date_range))), 'y': np.log(df.sum()), 'type': 'line', 'name': 'Cases'},
