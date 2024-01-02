@@ -83,10 +83,13 @@ app.layout = html.Div([
 )
 
 def update_graph(start_date, end_date, log_linear_switch, accumulated_switch, case_death_switch):
+    # switch between Cases and Death Datasets
     dataset = cases if case_death_switch else deaths
+
     selected_date_columns = [col for col in cases.columns if start_date <= col <= end_date]
     df = dataset[selected_date_columns]
 
+    # differentiate data if needed
     if accumulated_switch: df = df.diff(axis=1, periods=7)
     
     date_range = pd.date_range(start=start_date, end=end_date)
@@ -105,33 +108,19 @@ def update_graph(start_date, end_date, log_linear_switch, accumulated_switch, ca
     # pr_cases.fit(X_poly, daily_cases_data)
     # cases_poly_predictions = pr_cases.predict(X_poly)
 
-    if log_linear_switch:
-        figure = {
-        'data': [
-            {'x': list(range(len(date_range))), 'y': np.log(df.sum()), 'type': 'line', 'name': 'Cases'},
-            # {'x': list(range(len(date_range))), 'y': np.log(cases_poly_predictions), 'type': 'line', 'name': 'Predicted Cases', 'line': {'dash': 'dash'}}
-            
-        ],
-        'layout': {
-            'title': f'COVID-19 Cases from {start_date} to {end_date}',
-            'xaxis': {'title': 'Days'},
-            'yaxis': {'title': 'Number of Cases'}
-            }
-        }
-    else:
-        figure = {
-        'data': [
-            {'x': list(range(len(date_range))), 'y': df.sum(), 'type': 'line', 'name': 'Cases'},
-            # {'x': list(range(len(date_range))), 'y': cases_poly_predictions, 'type': 'line', 'name': 'Predicted Cases', 'line': {'dash': 'dash'}}
-            
-        ],
-        'layout': {
-            'title': f'COVID-19 Cases from {start_date} to {end_date}',
-            'xaxis': {'title': 'Days'},
-            'yaxis': {'title': 'Number of Cases'}
-            }
-        }
+
+    figure = {
+    'data': [
+        {'x': list(range(len(date_range))), 'y': np.log(df.sum()) if log_linear_switch else df.sum(), 'type': 'line', 'name': 'Cases'},
+        # {'x': list(range(len(date_range))), 'y': np.log(cases_poly_predictions), 'type': 'line', 'name': 'Predicted Cases', 'line': {'dash': 'dash'}}
         
+    ],
+    'layout': {
+        'title': f"{'' if accumulated_switch else 'Accumulated '}COVID-19 {'Cases' if case_death_switch else 'Deaths'} from {start_date} to {end_date}",
+        'xaxis': {'title': 'Days'},
+        'yaxis': {'title': f"{'New ' if accumulated_switch else ''}Number of Cases"}
+        }
+    }
 
     return figure
 
