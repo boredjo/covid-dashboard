@@ -31,45 +31,54 @@ app = Dash(__name__, external_stylesheets=external_stylesheets)
 server = app.server
 
 app.layout = html.Div([
-
-    # COVID Cases Interactive
-    html.H1("Interactive Dashboard for COVID-19 Cases",
-        style={'text-align': 'center'}),
-
-    dcc.DatePickerRange(
-        id='cases-date-picker-range',
-        start_date='2020-01-22',
-        end_date='2023-07-23',
-        display_format='YYYY-MM-DD',
-        min_date_allowed='2020-01-22',
-        max_date_allowed='2023-07-23',
+    # header for css
+    html.Div(
+        className="app-header",
+        children=[
+            html.Div('Plotly Dash', className="app-header--title")
+        ]
     ),
+    html.Div(
+        children=html.Div([
+            html.H1("Interactive Dashboard for COVID-19 Cases",
+                style={'text-align': 'center'}),
+
+            dcc.DatePickerRange(
+                id='cases-date-picker-range',
+                start_date='2020-01-22',
+                end_date='2023-07-23',
+                display_format='YYYY-MM-DD',
+                min_date_allowed='2020-01-22',
+                max_date_allowed='2023-07-23',
+            ),
     
-     daq.BooleanSwitch(
-        id='log_linear_switch',
-        on=False,
-        label="Log/Linear",
-        labelPosition="top",
-    ),
+            daq.BooleanSwitch(
+                id='log_linear_switch',
+                on=False,
+                label="Log/Linear",
+                labelPosition="top",
+            ),
 
-    daq.BooleanSwitch(
-        id='accumulated_switch',
-        on=False,
-        label="Accumulate Data",
-        labelPosition="top",
-    ),
+            daq.BooleanSwitch(
+                id='accumulated_switch',
+                on=False,
+                label="Accumulate Data",
+                labelPosition="top",
+            ),
 
-    daq.BooleanSwitch(
-        id='case_death_switch',
-        on=False,
-        label="Cases/Deaths",
-        labelPosition="top",
-    ),
+            daq.BooleanSwitch(
+                id='case_death_switch',
+                on=False,
+                label="Cases/Deaths",
+                labelPosition="top",
+            ),
     
-    dcc.Graph(id='cases-graph', style={
-        'border-style': 'solid',
-        'border-width': '5px'
-    }),
+            dcc.Graph(id='cases-graph', style={
+                'border-style': 'solid',
+                'border-width': '5px'
+            }),
+        ])
+    )   
 ])
 
 
