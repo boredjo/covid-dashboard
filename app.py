@@ -5,8 +5,8 @@ import numpy as np
 import plotly.graph_objs as go
 
 
-from sklearn.linear_model import LinearRegression
-from sklearn.preprocessing import PolynomialFeatures
+# from sklearn.linear_model import LinearRegression
+# from sklearn.preprocessing import PolynomialFeatures
 from datetime import datetime as dt
 
 import dash
@@ -15,18 +15,24 @@ import dash_daq as daq
 from dash import html
 from dash.dependencies import Input, Output 
 
-
+# load data
 cases = pd.read_csv('./data/cases.csv')
-selected_date_columns = [col for col in cases.columns if '2020-01-22' <= col <= '2023-07-23']
-cases = cases[selected_date_columns]
-
 deaths = pd.read_csv('./data/deaths.csv')
-selected_date_columns = [col for col in deaths.columns if '2020-01-22' <= col <= '2023-07-23']
-deaths = deaths[selected_date_columns]
 
-external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
-app = Dash(__name__, external_stylesheets=external_stylesheets)
+column_list = ['State']
+column_list.extend(list(cases.columns[4:]))
+
+cases = cases[column_list].groupby(by=["State"]).sum()
+cases.loc['US',:] = cases.sum(axis=0)
+
+deaths = deaths[column_list].groupby(by=["State"]).sum()
+deaths.loc['US',:] = deaths.sum(axis=0)
+
+from state_dic import dropdown_options, state_dic
+
+# dash app
+app = Dash(__name__)
 
 server = app.server
 
@@ -51,11 +57,19 @@ app.layout = html.Div([
                 min_date_allowed='2020-01-22',
                 max_date_allowed='2023-07-23',
             ),
+
+            dcc.Dropdown(
+                id='cases-state-selection',
+                options=dropdown_options,
+                multi=True,
+                style={'width': '200px'},
+                value=['US']
+            ),
     
             daq.BooleanSwitch(
                 id='log_linear_switch',
                 on=False,
-                label="Log/Linear",
+                label="Linear",
                 labelPosition="top",
             ),
 
@@ -86,48 +100,38 @@ app.layout = html.Div([
     Output('cases-graph', 'figure'),
     [Input('cases-date-picker-range', 'start_date'),
      Input('cases-date-picker-range', 'end_date'),
+     Input('cases-state-selection', 'value'),
      Input('log_linear_switch', 'on'),
      Input('accumulated_switch', 'on'),
      Input('case_death_switch', 'on')]
 )
 
-def update_graph(start_date, end_date, log_linear_switch, accumulated_switch, case_death_switch):
+def update_graph(start_date, end_date, states, log_linear_switch, accumulated_switch, case_death_switch):
     # switch between Cases and Death Datasets
-    dataset = cases if case_death_switch else deaths
+    dataset = deaths if case_death_switch else cases
+
+    # select columns based on date selection
 
     selected_date_columns = [col for col in cases.columns if start_date <= col <= end_date]
     df = dataset[selected_date_columns]
 
     # differentiate data if needed
-    if accumulated_switch: df = df.diff(axis=1, periods=7)
-    
-    date_range = pd.date_range(start=start_date, end=end_date)
-    
-    # daily_cases = []
-    # for col in cases.columns:
-    #     daily_cases.append(cases[col].sum())
-    # daily_cases_data = pd.Series(daily_cases)
-    
-    # days = np.arange(len(daily_cases_data))
-    
-    # poly = PolynomialFeatures(degree=4)
-    # X_poly = poly.fit_transform(days.reshape(-1, 1))
+    if accumulated_switch: df = df.diff(axis=1)
 
-    # pr_cases = LinearRegression()
-    # pr_cases.fit(X_poly, daily_cases_data)
-    # cases_poly_predictions = pr_cases.predict(X_poly)
+    # use logarithmic scale
+    if log_linear_switch: df = np.log10(df)
+
+    # select states to graph
+    if states == []: states = ['US'] # US as default for empty selection
+    data = [{'x': df.loc[state].index, 'y': df.loc[state], 'type': 'line', 'name': state} for state in states]
 
 
     figure = {
-    'data': [
-        {'x': list(range(len(date_range))), 'y': np.log(df.sum()) if log_linear_switch else df.sum(), 'type': 'line', 'name': 'Cases'},
-        # {'x': list(range(len(date_range))), 'y': np.log(cases_poly_predictions), 'type': 'line', 'name': 'Predicted Cases', 'line': {'dash': 'dash'}}
-        
-    ],
+    'data': data,
     'layout': {
-        'title': f"{'' if accumulated_switch else 'Accumulated '}COVID-19 {'Cases' if case_death_switch else 'Deaths'} from {start_date} to {end_date}",
+        'title': f"{'' if accumulated_switch else 'Accumulated '}COVID-19 {'Deaths' if case_death_switch else 'Cases'} from {start_date} to {end_date}{' in ' + state_dic[states[0]] if len(states) < 2 else ''}",
         'xaxis': {'title': 'Days'},
-        'yaxis': {'title': f"{'New ' if accumulated_switch else ''}Number of Cases"}
+        'yaxis': {'title': f"{'New ' if accumulated_switch else ''}Number of Cases {'in logarithm base 10' if log_linear_switch else ''}"}
         }
     }
 
