@@ -12,6 +12,10 @@ h3 {
     margin: 10px auto;
 }
 
+.cmSQpo {
+    background: gray !important;
+}
+
 #body-wrapper {
     display: flex;
     flex-direction: column;
