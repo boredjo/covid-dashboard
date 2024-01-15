@@ -37,83 +37,78 @@ app = Dash(__name__)
 server = app.server
 
 app.layout = html.Div([
-    # header for css
-    html.Div(
-        className="app-header",
-        children=[
-            html.Div('Plotly Dash', className="app-header--title")
-        ]
-    ),
     html.Div(
         children=html.Div([
-            html.H1("Interactive Dashboard for COVID-19 Cases",
+            html.H1("Interactive Dashboard for COVID-19 Data",
                 style={'text-align': 'center'}),
 
-            dcc.DatePickerRange(
-                id='cases-date-picker-range',
-                start_date='2020-01-22',
-                end_date='2023-07-23',
-                display_format='YYYY-MM-DD',
-                min_date_allowed='2020-01-22',
-                max_date_allowed='2023-07-23',
+            html.H3("Select States"),
+            
+            html.Div(
+                children=[
+                    dcc.Dropdown(
+                        id='state-selection',
+                        options=dropdown_options,
+                        multi=True,
+                        style={'width': '200px'},
+                        value=['US']
+                    ),
+                ],
+                id='selection-wrapper'
             ),
 
-            dcc.Dropdown(
-                id='cases-state-selection',
-                options=dropdown_options,
-                multi=True,
-                style={'width': '200px'},
-                value=['US']
-            ),
-    
-            daq.BooleanSwitch(
-                id='log_linear_switch',
-                on=False,
-                label="Linear",
-                labelPosition="top",
-            ),
+            html.H3("Other Options"),
 
-            daq.BooleanSwitch(
-                id='accumulated_switch',
-                on=False,
-                label="Accumulate Data",
-                labelPosition="top",
-            ),
+            html.Div(
+                children=[
+                    daq.BooleanSwitch(
+                        id='log_linear_switch',
+                        on=False,
+                        label="Linear/Log",
+                        labelPosition="top",
+                        className='button-item',
+                    ),
 
-            daq.BooleanSwitch(
-                id='case_death_switch',
-                on=False,
-                label="Cases/Deaths",
-                labelPosition="top",
+                    daq.BooleanSwitch(
+                        id='accumulated_switch',
+                        on=False,
+                        label="Differentiate Data",
+                        labelPosition="top",
+                        className='button-item',
+                    ),
+
+                    daq.BooleanSwitch(
+                        id='case_death_switch',
+                        on=False,
+                        label="Cases/Deaths",
+                        labelPosition="top",
+                        className='button-item',
+                    ),                 
+                ],
+                id='button-wrapper'
             ),
-    
-            dcc.Graph(id='cases-graph', style={
-                'border-style': 'solid',
-                'border-width': '5px'
-            }),
-        ])
-    )   
-])
+            
+            
+        ], 
+        id='parameter-box'
+        ),      
+    ),
+    dcc.Graph(id='graph'), 
+],
+id='body-wrapper')
 
 
 @app.callback(
-    Output('cases-graph', 'figure'),
-    [Input('cases-date-picker-range', 'start_date'),
-     Input('cases-date-picker-range', 'end_date'),
-     Input('cases-state-selection', 'value'),
+    Output('graph', 'figure'),
+    [Input('state-selection', 'value'),
      Input('log_linear_switch', 'on'),
      Input('accumulated_switch', 'on'),
      Input('case_death_switch', 'on')]
 )
 
-def update_graph(start_date, end_date, states, log_linear_switch, accumulated_switch, case_death_switch):
+def update_graph(states, log_linear_switch, accumulated_switch, case_death_switch):
     # switch between Cases and Death Datasets
-    dataset = deaths if case_death_switch else cases
-
-    # select columns based on date selection
-
-    selected_date_columns = [col for col in cases.columns if start_date <= col <= end_date]
-    df = dataset[selected_date_columns]
+    df = deaths if case_death_switch else cases
 
     # differentiate data if needed
     if accumulated_switch: df = df.diff(axis=1)
@@ -129,9 +124,9 @@ def update_graph(start_date, end_date, states, log_linear_switch, accumulated_sw
     figure = {
     'data': data,
     'layout': {
-        'title': f"{'' if accumulated_switch else 'Accumulated '}COVID-19 {'Deaths' if case_death_switch else 'Cases'} from {start_date} to {end_date}{' in ' + state_dic[states[0]] if len(states) < 2 else ''}",
+        'title': f"{'' if accumulated_switch else 'Accumulated '}COVID-19 {'Deaths' if case_death_switch else 'Cases'} by Day{' in ' + state_dic[states[0]] if len(states) < 2 else ''}",
         'xaxis': {'title': 'Days'},
-        'yaxis': {'title': f"{'New ' if accumulated_switch else ''}Number of Cases {'in logarithm base 10' if log_linear_switch else ''}"}
+        'yaxis': {'title': f"{'New ' if accumulated_switch else ''}Number of {'Deaths' if case_death_switch else 'Cases'} {'in logarithm base 10' if log_linear_switch else ''}"}
         }
     }
 

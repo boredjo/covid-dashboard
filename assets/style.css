@@ -1,3 +1,32 @@
 h1 {
     color:red;
 }
+
+#body-wrapper {
+    display: flex;
+}
+
+#parameter-box {
+    display: flex;
+}
+
+#selection-wrapper {
+    margin: 50px;
+    display: flex;
+    justify-content: center;
+}
+
+.Select-control {
+    width: 50vw;
+}
+
+#button-wrapper {
+    border: red;
+    display: flex;
+    justify-content: center;
+}
+
+.button-item {
+    display: inline;
+    padding: 50px 0 50px 0;
+}
