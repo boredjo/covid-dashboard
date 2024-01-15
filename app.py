@@ -69,7 +69,6 @@ app.layout = html.Div([
                         labelPosition="top",
                         className='button-item',
                         color="#00cc96",
-                        style={'backgroundColor': '#111111'},
                     ),
 
                     daq.BooleanSwitch(
