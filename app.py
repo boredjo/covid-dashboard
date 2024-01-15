@@ -50,7 +50,8 @@ app.layout = html.Div([
                         id='state-selection',
                         options=dropdown_options,
                         multi=True,
-                        style={'width': '200px'},
+                        style={'width': '80vw',
+                            'backgroundColor': '#111111'},
                         value=['US']
                     ),
                 ],
@@ -67,6 +68,7 @@ app.layout = html.Div([
                         label="Linear/Log",
                         labelPosition="top",
                         className='button-item',
+                        color="#00cc96"
                     ),
 
                     daq.BooleanSwitch(
@@ -75,6 +77,7 @@ app.layout = html.Div([
                         label="Differentiate Data",
                         labelPosition="top",
                         className='button-item',
+                        color="#ab63fa"
                     ),
 
                     daq.BooleanSwitch(
@@ -83,6 +86,7 @@ app.layout = html.Div([
                         label="Cases/Deaths",
                         labelPosition="top",
                         className='button-item',
+                        color="#ef553b"
                     ),                 
                 ],
                 id='button-wrapper'
@@ -121,14 +125,14 @@ def update_graph(states, log_linear_switch, accumulated_switch, case_death_switc
     data = [{'x': df.loc[state].index, 'y': df.loc[state], 'type': 'line', 'name': state} for state in states]
 
 
-    figure = {
-    'data': data,
-    'layout': {
+    data = [go.Scatter(x=df.loc[state].index, y=df.loc[state], mode='lines', name=state) for state in states]
+
+    figure = go.Figure(data=data, layout={
         'title': f"{'' if accumulated_switch else 'Accumulated '}COVID-19 {'Deaths' if case_death_switch else 'Cases'} by Day{' in ' + state_dic[states[0]] if len(states) < 2 else ''}",
         'xaxis': {'title': 'Days'},
         'yaxis': {'title': f"{'New ' if accumulated_switch else ''}Number of {'Deaths' if case_death_switch else 'Cases'} {'in logarithm base 10' if log_linear_switch else ''}"}
-        }
-    }
+    })
+    figure.update_layout(template='plotly_dark')
 
     return figure
 

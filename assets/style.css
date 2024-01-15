@@ -1,24 +1,43 @@
+html {
+    font-family: Arial, Helvetica, sans-serif;
+    background-color: #111111;
+    color: #f3f5f9;
+}
+
 h1 {
-    color:red;
+    color: #636efb;
+}
+
+h3 {
+    margin: 10px auto;
 }
 
 #body-wrapper {
     display: flex;
+    flex-direction: column;
 }
 
 #parameter-box {
     display: flex;
+    flex-direction: column;
 }
 
 #selection-wrapper {
-    margin: 50px;
+    margin: 0 50px;
     display: flex;
     justify-content: center;
+    color: #636efb;
 }
 
 .Select-control {
     width: 50vw;
+    background-color: rgb(25, 25, 25) !important;
+  }
+  
+.Select-menu-outer {
+    background-color: rgb(25, 25, 25);
 }
+
 
 #button-wrapper {
     border: red;
@@ -28,5 +47,9 @@ h1 {
 
 .button-item {
     display: inline;
-    padding: 50px 0 50px 0;
+    padding: 0 50px;
+}
+
+#graph {
+    height: 65vh;
 }
