@@ -130,7 +130,7 @@ def update_graph(states, log_linear_switch, accumulated_switch, case_death_switc
     figure = go.Figure(data=data, layout={
         'title': f"{'' if accumulated_switch else 'Accumulated '}COVID-19 {'Deaths' if case_death_switch else 'Cases'} by Day{' in ' + state_dic[states[0]] if len(states) < 2 else ''}",
         'xaxis': {'title': 'Days'},
-        'yaxis': {'title': f"{'New ' if accumulated_switch else ''}Number of {'Deaths' if case_death_switch else 'Cases'} {'in logarithm base 10' if log_linear_switch else ''}"}
+        'yaxis': {'title': f"Number of{' new ' if accumulated_switch else ''} {'Deaths' if case_death_switch else 'Cases'} {'in logarithm base 10' if log_linear_switch else ''}"}
     })
     figure.update_layout(template='plotly_dark')
 
